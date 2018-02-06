@@ -78,21 +78,73 @@
         "description": "Subnet address prefix"
       }
     },
-    "dbType": {
+
+    "dbNewOrExisting": {
       "type": "string",
       "allowedValues": [
-        "sqlserver"
+        "new",
+        "existing"
       ],
-      "metadata": {
-        "description": "Database type. Only SQL Server 2014 on VM is supported for now"
-      }
+      "defaultValue": "new"
     },
+
     "dbVMName": {
       "type": "string",
       "metadata": {
         "description": "Database VM name"
       }
     },
+
+    "dbVMSize": {
+      "type": "string",
+      "metadata": {
+        "description": "Database VM size"
+      }
+    },
+
+
+    "dbType": {
+      "type": "string",
+      "allowedValues": [
+        "sqlserver2014",
+        "sqlserver2016",
+        "sqlserver",
+        "oracle",
+        "db2"
+      ],
+      "defaultValue": "sqlserver2016",
+      "metadata": {
+        "description": "Database type. Only SQL Server 2014 and 2016 on VM is supported for now"
+      }
+    },
+
+    "dbName": {
+      "type": "string",
+      "metadata": {
+        "description": "Database service name"
+      }
+    },
+
+
+
+    "dbPort": {
+      "type": "string",
+      "defaultValue": "1433",
+      "metadata": {
+        "description": "Database port"
+      }
+    },
+
+
+    "dbTablespace": {
+      "type": "string",
+      "defaultValue": "#_no_tablespace_#",
+      "metadata": {
+        "description": "Database tablespace"
+      }
+    },
+
+
     "dbVMAdminUsername": {
       "type": "string",
       "metadata": {
@@ -105,12 +157,7 @@
         "description": "Database VM password"
       }
     },
-    "dbVMSize": {
-      "type": "string",
-      "metadata": {
-        "description": "Database VM size"
-      }
-    },
+
     "dbUser": {
       "type": "string",
       "metadata": {
@@ -203,9 +250,15 @@
         "description": "Informatica domain encryption key keyphrase"
       }
     },
+    "infaDQSkipOrCreate": {
+      "type": "string",
+      "metadata": {
+        "description": "Informatica DQ services should be created or not"
+      }
+    },
     "infaDomainLicense": {
       "type": "string",
-      "defaultValue": "nolicense",  
+      "defaultValue": "nolicense",
       "metadata": {
         "description": "Informatica domain license key file url"
       }
@@ -214,9 +267,9 @@
       "type": "string",
       "metadata": {
         "description": "Base URL for Marketplace",
-        "artifactsBaseUrl": "https://raw.githubusercontent.com/anandamit/infadq1011/master/DQ"
+        "artifactsBaseUrl": "https://raw.githubusercontent.com/asarkar09/infadq1011hf2/master/DQ"
       },
-      "defaultValue": "https://raw.githubusercontent.com/anandamit/infadq1011/master/DQ"
+      "defaultValue": "https://raw.githubusercontent.com/asarkar09/infadq1011hf2/master/DQ"
     },
     "mrsdbuser": {
       "type": "string",
@@ -253,39 +306,93 @@
       }
     }
   },
-    "variables": {
-        "baseUri": "[concat(parameters('baseUrl'), '/')]",
+  "variables": {
+    "baseUri": "[concat(parameters('baseUrl'), '/')]",
 
-        "storageUri": "[concat(variables('baseuri'), 'storage', parameters('storageExistingOrNew'),'.json')]",
-        "vnetUri": "[concat(variables('baseuri'), 'vnet', parameters('vnetExistingOrNew'),'.json')]",
-        "nsgUri": "[concat(variables('baseuri'), 'networksecuritygroup.json')]",
-        "dbUri": "[concat(variables('baseuri'), parameters('dbType'),'.json')]",
+    "storageUri": "[concat(variables('baseuri'), 'storage', parameters('storageExistingOrNew'),'.json')]",
+    "vnetUri": "[concat(variables('baseuri'), 'vnet', parameters('vnetExistingOrNew'),'.json')]",
+    "nsgUri": "[concat(variables('baseuri'), 'networksecuritygroup.json')]",
+    //  "dbUri": "[concat(variables('baseuri'), parameters('dbType'),'.json')]",
+    "dbUri": "[concat(variables('baseuri'), 'database', parameters('dbNewOrExisting'),'.json')]",
 
-        "nodeUriList": [
-            "node",
-            "node",
-            "nodemulti"
-        ],
+    /* "nodeUriList": [
+      "node",
+      "node",
+      "nodemulti"
+    ], */
 
-        "nodeVMUri": "[concat(variables('baseuri'), 'node', parameters('nodeVMOS'), parameters('nodeVMAuthType'), '.json')]",
-
-        "infaNodeNamePrefix": "node",
-
-        "vnetIDs": {
-            "existing": "[resourceId(parameters('existingVnetRG'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
-            "new": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
-        },
-        "vnetID": "[variables('vnetIDs')[parameters('vnetExistingOrNew')]]",
-        "subnetID": "[concat(variables('vnetID'), '/subnets/', parameters('subnetName'))]",
-
-        "storageIDs": {
-            "existing": "[resourceId(parameters('existingStorageRG'), 'Microsoft.Storage/storageAccounts', parameters('storageName'))]",
-            "new": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageName'))]"
-        },
-        "storageID": "[variables('storageIDs')[parameters('storageExistingOrNew')]]",
-
-        "nsgName": "NetworkSecurityGroup"
+    "nodeUriList": {
+      "False": "node",
+      "True": "nodemulti"
     },
+
+    "nodeVMUri": "[concat(variables('baseuri'), 'node', parameters('nodeVMOS'), parameters('nodeVMAuthType'), '.json')]",
+
+    "infaNodeNamePrefix": "node",
+
+    "vnetIDs": {
+      "existing": "[resourceId(parameters('existingVnetRG'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+      "new": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+    },
+    "vnetID": "[variables('vnetIDs')[parameters('vnetExistingOrNew')]]",
+    "subnetID": "[concat(variables('vnetID'), '/subnets/', parameters('subnetName'))]",
+
+    "storageIDs": {
+      "existing": "[resourceId(parameters('existingStorageRG'), 'Microsoft.Storage/storageAccounts', parameters('storageName'))]",
+      "new": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageName'))]"
+    },
+    "storageID": "[variables('storageIDs')[parameters('storageExistingOrNew')]]",
+
+    "nsgName": "NetworkSecurityGroup",
+
+    "dbTypes": {
+      "sqlserver2014": "MSSQLServer",
+      "sqlserver2016": "MSSQLServer",
+      "sqlserver": "MSSQLServer",
+      "oracle": "Oracle",
+      "db2": "DB2"
+    },
+    "dbType": "[variables('dbTypes')[parameters('dbType')]]",
+    "dbPort": "[int(parameters('dbPort'))]",
+
+    "mrsUsers": {
+      "create": "[parameters('mrsdbuser')]",
+      "skip": "skip"
+    },
+    "mrsPasswords": {
+      "create": "[parameters('mrsdbpwd')]",
+      "skip": "skip"
+    },
+
+    "mrsUser": "[variables('mrsUsers')[parameters('infaDQSkipOrCreate')]]",
+    "mrsPassword": "[variables('mrsPasswords')[parameters('infaDQSkipOrCreate')]]",
+
+    "refUsers": {
+      "create": "[parameters('refdatadbuser')]",
+      "skip": "skip"
+    },
+    "refPasswords": {
+      "create": "[parameters('refdatadbpwd')]",
+      "skip": "skip"
+    },
+
+    "refUser": "[variables('refUsers')[parameters('infaDQSkipOrCreate')]]",
+    "refPassword": "[variables('refPasswords')[parameters('infaDQSkipOrCreate')]]",
+
+    "profileUsers": {
+      "create": "[parameters('profiledbuser')]",
+      "skip": "skip"
+    },
+    "profilePasswords": {
+      "create": "[parameters('profiledbpwd')]",
+      "skip": "skip"
+    },
+
+    "profileUser": "[variables('profileUsers')[parameters('infaDQSkipOrCreate')]]",
+    "profilePassword": "[variables('profilePasswords')[parameters('infaDQSkipOrCreate')]]"
+
+
+  },
     "resources": [
         {
             "name": "storageSetup",
@@ -396,6 +503,15 @@
                 "storageName": {
                   "value": "[parameters('storageName')]"
                 },
+                "storageID": {
+                  "value": "[variables('storageID')]"
+                },
+                "storageRef": {
+                  "value": "[reference('storageSetup').outputs.storageRef.value]"
+                },
+                "dbType": {
+                  "value": "[parameters('dbType')]"
+                },
                 "dbVMName": {
                   "value": "[parameters('dbVMName')]"
                 },
@@ -414,6 +530,9 @@
                 "dbPassword": {
                   "value": "[parameters('dbPassword')]"
                 },
+                "dbName": {
+                  "value": "[parameters('dbName')]"
+                },
                 "vnetName": {
                   "value": "[parameters('vnetName')]"
                 },
@@ -430,22 +549,22 @@
                   "value": "[variables('baseUri')]"
                 },
                 "mrsdbuser": {
-                  "value": "[parameters('mrsdbuser')]"
+                  "value": "[variables('mrsUser')]"
                 },
                 "mrsdbpwd": {
-                  "value": "[parameters('mrsdbpwd')]"
+                  "value": "[variables('mrsPassword')]"
                 },
                 "refdatadbuser": {
-                  "value": "[parameters('refdatadbuser')]"
+                  "value": "[variables('refUser')]"
                 },
                 "refdatadbpwd": {
-                  "value": "[parameters('refdatadbpwd')]"
+                  "value": "[variables('refPassword')]"
                 },
                 "profiledbuser": {
-                  "value": "[parameters('profiledbuser')]"
+                  "value": "[variables('profileUser')]"
                 },
                 "profiledbpwd": {
-                  "value": "[parameters('profiledbpwd')]"
+                  "value": "[variables('profilePassword')]"
                 },
                 "informaticaTags": {
                   "value": "[parameters('informaticaTags')]"
@@ -476,6 +595,9 @@
                 "storageID": {
                   "value": "[variables('storageID')]"
                 },
+                "storageRef": {
+                  "value": "[reference('storageSetup').outputs.storageRef.value]"
+                },
                 "vnetName": {
                   "value": "[parameters('vnetName')]"
                 },
@@ -488,8 +610,23 @@
                 "nsgName": {
                   "value": "[variables('nsgName')]"
                 },
+                "dbNewOrExisting": {
+                  "value": "[parameters('dbNewOrExisting')]"
+                },
                 "dbVMName": {
                   "value": "[parameters('dbVMName')]"
+                },
+                "dbType": {
+                  "value": "[variables('dbType')]"
+                },
+                "dbName": {
+                  "value": "[parameters('dbName')]"
+                },
+                "dbPort": {
+                  "value": "[variables('dbPort')]"
+                },
+                "dbTablespace": {
+                  "value": "[parameters('dbTablespace')]"
                 },
                 "dbUser": {
                   "value": "[parameters('dbUser')]"
@@ -515,6 +652,9 @@
                 "nodeVMNamePrefix": {
                   "value": "[parameters('nodeVMNamePrefix')]"
                 },
+                "infaVersion": {
+                  "value": "[parameters('infaVersion')]"
+                },
                 "infaDomainName": {
                   "value": "[parameters('infaDomainName')]"
                 },
@@ -537,22 +677,22 @@
                   "value": "[variables('baseUri')]"
                 },
                 "mrsdbuser": {
-                  "value": "[parameters('mrsdbuser')]"
+                  "value": "[variables('mrsUser')]"
                 },
                 "mrsdbpwd": {
-                  "value": "[parameters('mrsdbpwd')]"
+                  "value": "[variables('mrsPassword')]"
                 },
                 "refdatadbuser": {
-                  "value": "[parameters('refdatadbuser')]"
+                  "value": "[variables('refUser')]"
                 },
                 "refdatadbpwd": {
-                  "value": "[parameters('refdatadbpwd')]"
+                  "value": "[variables('refPassword')]"
                 },
                 "profiledbuser": {
-                  "value": "[parameters('profiledbuser')]"
+                  "value": "[variables('profileUser')]"
                 },
                 "profiledbpwd": {
-                  "value": "[parameters('profiledbpwd')]"
+                  "value": "[variables('profilePassword')]"
                 },
                 "informaticaTags": {
                   "value": "[parameters('informaticaTags')]"
