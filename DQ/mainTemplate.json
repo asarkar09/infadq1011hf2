@@ -107,10 +107,10 @@
       "type": "string",
       "allowedValues": [
         "sqlserver2014",
-        "sqlserver2016",
-        "sqlserver",
-        "oracle",
-        "db2"
+        "sqlserver2016"
+     //   "sqlserver",
+     //   "oracle",
+      //  "db2"
       ],
       "defaultValue": "sqlserver2016",
       "metadata": {
@@ -348,9 +348,9 @@
     "dbTypes": {
       "sqlserver2014": "MSSQLServer",
       "sqlserver2016": "MSSQLServer",
-      "sqlserver": "MSSQLServer",
-      "oracle": "Oracle",
-      "db2": "DB2"
+   //   "sqlserver": "MSSQLServer",
+   //   "oracle": "Oracle",
+   //   "db2": "DB2"
     },
     "dbType": "[variables('dbTypes')[parameters('dbType')]]",
     "dbPort": "[int(parameters('dbPort'))]",
