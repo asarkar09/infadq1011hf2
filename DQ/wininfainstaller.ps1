@@ -1,5 +1,6 @@
 
 Param(
+ [string]$domainVersion,
   [string]$domainHost,
   [string]$domainName,
   [string]$domainUser,
@@ -7,8 +8,10 @@ Param(
   [string]$nodeName,
   [int]$nodePort,
 
+  [string]$dbNewOrExisting,
   [string]$dbType,
   [string]$dbName,
+  [string]$dbTablespace,
   [string]$dbUser,
   [string]$dbPassword,
   [string]$dbHost,
@@ -106,6 +109,8 @@ echo Editing Informatica silent installation file
 `
 -replace '^CLOUD_SUPPORT_ENABLE=.*$',"CLOUD_SUPPORT_ENABLE=$CLOUD_SUPPORT_ENABLE"  `
 `
+-replace '^UPGRADE_WITHOUT_BIGDATA=.*$',"UPGRADE_WITHOUT_BIGDATA=1"  `
+`
 -replace '^ENABLE_USAGE_COLLECTION=.*$',"ENABLE_USAGE_COLLECTION=1"  `
 `
 -replace '^USER_INSTALL_DIR=.*$',"USER_INSTALL_DIR=$userInstallDir"  `
@@ -148,6 +153,9 @@ echo Editing Informatica silent installation file
 
 }) | sc $propertyFile
 
+if($dbType -eq "DB2" -and $dbTablespace -ne "#_no_tablespace_#") {
+	(gc $propertyFile | %{$_ -replace '^DB2_TABLESPACE=.*$',"DB2_TABLESPACE=$dbTablespace"}) | sc $propertyFile
+}
 
 # To speed up installation
 Rename-Item $installerHome/source $installerHome/source_temp
@@ -189,7 +197,13 @@ function createDQServices() {
     ac C:\DQServiceLog.log $out
 }
 
-createDQServices
+if [ $joinDomain -eq 0 ]
+then
+   if [ "$dbmrsuser" != "skip" -a "$dbmrspwd" != "skip" ]
+   then
+   createDQServices
+   fi
+fi
 
 if($infaLicenseFile -ne "") {
 
