@@ -11,6 +11,9 @@
     "storageID": {
       "type": "string"
     },
+    "storageRef": {
+      "type": "string"
+    },
     "vnetName": {
       "type": "string"
     },
@@ -23,7 +26,22 @@
     "nsgName": {
       "type": "string"
     },
+    "dbNewOrExisting": {
+      "type": "string"
+    },
     "dbVMName": {
+      "type": "string"
+    },
+    "dbType": {
+      "type": "string"
+    },
+    "dbName": {
+      "type": "string"
+    },
+    "dbPort": {
+      "type": "int"
+    },
+    "dbTablespace": {
       "type": "string"
     },
     "dbUser": {
@@ -51,6 +69,9 @@
     "nodeVMNamePrefix": {
       "type": "string",
       "minLength": 1
+    },
+    "infaVersion": {
+      "type": "string"
     },
     "infaDomainName": {
       "type": "string",
@@ -111,9 +132,9 @@
     "sshKeyPath": "[concat('/home/',parameters('nodeVMAdminUsername'),'/.ssh/authorized_keys')]",
 
     "infaNodePort": 6005,
-    "dbType": "MSSQLSERVER",
+  /*  "dbType": "MSSQLSERVER",
     "dbInstanceName": "infadb",
-    "dbPort": "1433",
+    "dbPort": "1433", */
 
     "imagePublisher": "informatica",
     "imageOffer": "data_quality_10_1_1_rhel_7_3_byol-preview",
@@ -125,7 +146,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "location": "[parameters('location')]",
             "apiVersion": "2016-10-01",
-            "dependsOn": [ ],
+         //   "dependsOn": [ ],
 
             "tags": {
                 "displayName": "publicip",
@@ -219,7 +240,8 @@
                         "caching": "ReadWrite",
                         "createOption": "FromImage",
                       "vhd": {
-                        "uri": "[concat('https://', parameters('storageName'), '.blob.core.windows.net/vhds/', toLower(parameters('nodeVMNamePrefix')), uniqueString(resourceGroup().id, deployment().name), '.osdisk.vhd')]"
+                        //   "uri": "[concat('https://', parameters('storageName'), '.blob.core.windows.net/vhds/', toLower(parameters('nodeVMNamePrefix')), uniqueString(resourceGroup().id, deployment().name), '.osdisk.vhd')]"
+                        "uri": "[concat(parameters('storageRef'), 'vhds/', parameters('nodeVMNamePrefix'), uniqueString(resourceGroup().id), add(variables('index'), 1), '.osdisk.vhd')]"
                       }
                     }
           },
@@ -255,7 +277,8 @@
                 ]
               },
               "protectedSettings": {
-                "commandToExecute": "[concat('sudo sh ', variables('extScriptFile'), ' ', concat(parameters('nodeVMNamePrefix'), '1'), ' ', parameters('infaDomainName'), ' \"', parameters('infaDomainUser'), '\" \"', parameters('infaDomainPassword'), '\" ', parameters('infaNodeNamePrefix'), add(variables('index'), 1), ' ', variables('infaNodePort'), ' ', variables('dbType'), ' ', variables('dbInstanceName'), ' \"', parameters('dbUser'), '\" \"', parameters('dbPassword'), '\" ', parameters('dbVMName'), ' ', variables('dbPort'), ' \"', parameters('infaKeyword'), '\" ', variables('index'), ' \"', parameters('nodeVMAdminUsername'), '\" \"', parameters('storageName'), '\" ', listKeys(parameters('storageID'), '2016-01-01').keys[0].value, ' \"', parameters('infaDomainLicense'), '\" \"',parameters('mrsdbuser'),'\" \"',parameters('mrsdbpwd'),'\" \"',parameters('refdatadbuser'),'\" \"',parameters('refdatadbpwd'),'\" \"',parameters('profiledbuser'),'\" \"',parameters('profiledbpwd'),'\"')]"
+                //   "commandToExecute": "[concat('sudo sh ', variables('extScriptFile'), ' ', concat(parameters('nodeVMNamePrefix'), '1'), ' ', parameters('infaDomainName'), ' \"', parameters('infaDomainUser'), '\" \"', parameters('infaDomainPassword'), '\" ', parameters('infaNodeNamePrefix'), add(variables('index'), 1), ' ', variables('infaNodePort'), ' ', variables('dbType'), ' ', variables('dbInstanceName'), ' \"', parameters('dbUser'), '\" \"', parameters('dbPassword'), '\" ', parameters('dbVMName'), ' ', variables('dbPort'), ' \"', parameters('infaKeyword'), '\" ', variables('index'), ' \"', parameters('nodeVMAdminUsername'), '\" \"', parameters('storageName'), '\" ', listKeys(parameters('storageID'), '2016-01-01').keys[0].value, ' \"', parameters('infaDomainLicense'), '\" \"',parameters('mrsdbuser'),'\" \"',parameters('mrsdbpwd'),'\" \"',parameters('refdatadbuser'),'\" \"',parameters('refdatadbpwd'),'\" \"',parameters('profiledbuser'),'\" \"',parameters('profiledbpwd'),'\"')]"
+                "commandToExecute": "[concat('sh ', variables('extScriptFile'),' ', parameters('infaVersion'), ' ', concat(parameters('nodeVMNamePrefix'), '1'), ' ', parameters('infaDomainName'), ' \"', parameters('infaDomainUser'), '\" \"', parameters('infaDomainPassword'), '\" ', parameters('infaNodeNamePrefix'), add(variables('index'), 1), ' ', variables('infaNodePort'), ' ', parameters('dbNewOrExisting'),' ', parameters('dbType'), ' ', parameters('dbName'),' ', parameters('dbTablespace'), ' \"', parameters('dbUser'), '\" \"', parameters('dbPassword'), '\" ', parameters('dbVMName'), ' ', parameters('dbPort'), ' \"', parameters('infaKeyword'), '\" ', variables('index'), ' \"', parameters('nodeVMAdminUsername'), '\" \"', parameters('storageName'), '\" ', listKeys(parameters('storageID'), '2016-01-01').keys[0].value, ' \"', parameters('infaDomainLicense'), '\" \"',parameters('mrsdbuser'),'\" \"',parameters('mrsdbpwd'),'\" \"',parameters('refdatadbuser'),'\" \"',parameters('refdatadbpwd'),'\" \"',parameters('profiledbuser'),'\" \"',parameters('profiledbpwd'),'\"')]"
               }
             }
           }
