@@ -1,280 +1,881 @@
-#!/bin/sh
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Compute.MultiVm",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "basics": [
+    ],
+    "steps": [
+      {
+        "label": "Informatica Domain Settings",
+        "name": "infaDomainConfiguration",
+        "subLabel": {
+          "preValidation": "Configure domain settings",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "Informatica Domain Settings",
+        "elements": [
+          {
+            "name": "domainConfig",
+            "type": "Microsoft.Common.Section",
+            "label": "Domain configuration",
+            "elements": [
 
-#Script arguments
-domainHost=${1}
-domainName=${2}
-domainUser=${3}
-domainPassword=${4}
-nodeName=${5}
-nodePort=${6}
+              {
+                "name": "infaVersion",
+                "type": "Microsoft.Common.DropDown",
+                "label": "Informatica Data Quality version",
+                "defaultValue": "10.1.1",
+                "toolTip": "Informatica Data Quality product version",
+                "constraints": {
+                  "allowedValues": [
+                    {
+                      "label": "10.1.1",
+                      "value": "1011"
+                    }
+                  ]
+                },
+                "visible": true
+              },
+              {
+                "name": "infaDomainName",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Informatica domain name",
+                "defaultValue": "Azure_Domain",
+                "toolTip": "Specify a name for the Domain",
+                "constraints": {
+                  "required": true,
+                  "regex": "^[a-z0-9A-Z_]{3,30}$",
+                  "validationMessage": "Only alphanumeric characters and underscore are allowed. The value must be 3-30"
+                }
+              },
+              {
+                "name": "infaDomainUser",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Informatica domain administrator name",
+                "defaultValue": "Administrator",
+                "toolTip": "Domain administrator user name",
+                "constraints": {
+                  "required": true,
+                  "regex": "^[a-z0-9A-Z_]{3,30}$",
+                  "validationMessage": "Only alphanumeric characters and underscore are allowed. The value must be 3-30"
+                }
+              },
+              {
+                "name": "infaDomainPassword",
+                "type": "Microsoft.Common.PasswordBox",
+                "label": {
+                  "password": "Informatica domain password",
+                  "confirmPassword": "Confirm Informatica domain password"
+                },
+                "constraints": {
+                  "required": true,
+                  "regex": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^\\s\\w])(?!.*[\"$]).{8,123}$",
+                  "validationMessage": "Password must be at least 8 characters in length. Should contain at least one special character, number, upper-case and lower-case character. Double quote(\") and dollar($) is not allowed"
+                },
+                "options": {
+                  "hideConfirmation": false
+                }
 
-dbType=${7}
-dbName=${8}
-dbUser=${9}
-dbPassword=${10}
-dbHost=${11}
-dbPort=${12}
+              },
+              {
+                "name": "infaDomainEncryptionKeyword",
+                "type": "Microsoft.Common.PasswordBox",
+                "toolTip": "Keyphrase for generating encryption key for domain",
+                "label": {
+                  "password": "Keyphrase for encryption key",
+                  "confirmPassword": "Confirm keyphrase for encryption key"
+                },
+                "constraints": {
+                  "required": true,
+                  "regex": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^\\s\\w])(?!.*[\"$]).{8,20}$",
+                  "validationMessage": "Keyphrase should contain 8-20 characters in length. Should contain at least one special character, number, upper-case and lower-case character. Double quote(\") and dollar($) is not allowed"
+                },
+                "options": {
+                  "hideConfirmation": true
+                }
+              },
+              {
+                "name": "infaDomainLicense",
+                "type": "Microsoft.Common.FileUpload",
+                "label": "Informatica license file",
+                "toolTip": "",
+                "constraints": {
+                  "required": false,
+                  "accept": ".key"
+                },
+                "options": {
+                  "multiple": false,
+                  "uploadMode": "url",
+                  "openMode": "text",
+                  "encoding": "UTF-8"
+                },
+                "visible": true
+              }
+            ]
+          },
+          {
+            "name": "domainServiceConfig",
+            "type": "Microsoft.Common.Section",
+            "label": "Service configuration",
+            "elements": [
+              {
+                "name": "DQServiceCreateOrSkip",
+                "type": "Microsoft.Common.OptionsGroup",
+                "label": "DQ services",
+                "defaultValue": "Create",
+                "toolTip": "Choose option Create if DQ Services (MRS,DIS,CMS,AS) has to be created or Skip to if you want to create it later",
+                "constraints": {
+                  "allowedValues": [
+                    {
+                      "label": "Create",
+                      "value": "create"
+                    },
+                    {
+                      "label": "Skip",
+                      "value": "skip"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+        
+     },
+              {
+                "name": "nodeVMConfiguration",
+                "label": "Node Settings",
+                "subLabel": {
+                  "preValidation": "Configure machine settings for the node",
+                  "postValidation": "Done"
+                },
+                "bladeTitle": "Node Settings",
+                "elements": [
+                  {
+                    "name": "nodeVMOS",
+                    "type": "Microsoft.Common.DropDown",
+                    "label": "Select the OS for the VM",
+                    "defaultValue": "Windows Server 2012 R2 Datacenter",
+                    "toolTip": "OS platform of the VM.",
+                    "constraints": {
+                      "allowedValues": [
+                        {
+                          "label": "Windows Server 2012 R2 Datacenter",
+                          "value": "windows"
+                        },
+                        {
+                          "label": "Red Hat Enterprise Linux 7.3",
+                          "value": "linux"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "nodeVMPrefix",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Machine prefix",
+                    "defaultValue": "VM",
+                    "toolTip": "Prefix for machine name",
+                    "constraints": {
+                      "required": true,
+                      "regex": "^([a-zA-Z][a-z0-9A-Z\\-]{1,29})$",
+                      "validationMessage": "Host prefix should begin with alphabets. Only alphanumeric characters, and hyphen are allowed. The value must be 2-29 characters long"
+                    }
+                  },
+                  {
+                    "name": "nodeVMAdminUsernameWin",
+                    "type": "Microsoft.Compute.UserNameTextBox",
+                    "label": "VM Username",
+                    "toolTip": "Admin username for the virtual machines.",
+                    "osPlatform": "Windows",
+                    "constraints": {
+                      "required": true
+                    },
+                    "visible": "[equals(steps('nodeVMConfiguration').nodeVMOS, 'windows')]"
+                  },
+                  {
+                    "name": "nodeVMAdminUsernameLin",
+                    "type": "Microsoft.Compute.UserNameTextBox",
+                    "label": "VM Username",
+                    "toolTip": "Admin username for the virtual machines.",
+                    "osPlatform": "Linux",
+                    "constraints": {
+                      "required": true
+                    },
+                    "visible": "[equals(steps('nodeVMConfiguration').nodeVMOS, 'linux')]"
+                  },
+                  {
+                    "name": "nodeVMAdminPasswordWin",
+                    "type": "Microsoft.Compute.CredentialsCombo",
+                    "label": {
+                      "password": "Password",
+                      "confirmPassword": "Confirm password"
+                    },
+                    "toolTip": {
+                      "password": ""
+                    },
+                    "constraints": {
+                      "required": true
+                    },
+                    "options": {
+                      "hideConfirmation": false
+                    },
+                    "osPlatform": "Windows",
+                    "visible": "[equals(steps('nodeVMConfiguration').nodeVMOS, 'windows')]"
+                  },
+                  {
+                    "name": "nodeVMAdminPasswordLin",
+                    "type": "Microsoft.Compute.CredentialsCombo",
+                    "label": {
+                      "authenticationType": "Authentication type",
+                      "password": "Password",
+                      "confirmPassword": "Confirm password",
+                      "sshPublicKey": "SSH public key"
+                    },
+                    "toolTip": {
+                      "authenticationType": "",
+                      "password": "",
+                      "sshPublicKey": ""
+                    },
+                    "constraints": {
+                      "required": true
+                    },
+                    "options": {
+                      "hideConfirmation": false,
+                      "hidePassword": false
+                    },
+                    "osPlatform": "Linux",
+                    "visible": "[equals(steps('nodeVMConfiguration').nodeVMOS, 'linux')]"
+                  },
+                  {
+                    "name": "nodeVMSizeWin",
+                    "type": "Microsoft.Compute.SizeSelector",
+                    "label": "Machine size",
+                    "toolTip": "The size of the machine",
+                    "recommendedSizes": [
+                      "Standard_DS11",
+                      "Standard_DS11_v2",
+                      "Standard_DS2",
+                      "Standard_DS2_v2"
+                    ],
+                    "osPlatform": "Windows",
+                    "imageReference": {
+                      "publisher": "informatica",
+                      "offer": "dataquality_10_1_1_windows_byol",
+                      "sku": "byol_windows_dataquality_10_1_1"
+                    },
+                    "count": 1,
+                    "visible": "[equals(steps('nodeVMConfiguration').nodeVMOS, 'windows')]"
+                  },
+                  {
+                    "name": "nodeVMSizeLin",
+                    "type": "Microsoft.Compute.SizeSelector",
+                    "label": "Machine size",
+                    "toolTip": "The size of the machine",
+                    "recommendedSizes": [
+                      "Standard_DS11",
+                      "Standard_DS11_v2",
+                      "Standard_DS2",
+                      "Standard_DS2_v2"
+                    ],
+                    "osPlatform": "Linux",
+                    "imageReference": {
+                      "publisher": "informatica",
+                      "offer": "data_quality_10_1_1_rhel_7_3_byol",
+                      "sku": "byol_rhel_7_3_data_quality_10_1_1"
+                    },
+                    "count": 1,
+                    "visible": "[equals(steps('nodeVMConfiguration').nodeVMOS, 'linux')]"
+                  }
+                ]
+              },
+          {
+            "name": "databaseConfiguration",
+            "label": "Database Settings",
+            "subLabel": {
+              "preValidation": "Configure database settings",
+              "postValidation": "Done"
+            },
+            "bladeTitle": "Database Settings",
+            "elements": [
+              {
+                "name": "databaseNewOrExisting",
+                "type": "Microsoft.Common.OptionsGroup",
+                "label": "Database",
+                "defaultValue": "New",
+                "toolTip": "Choose option New if database has to be created or Existing to use existing database on Azure",
+                "constraints": {
+                  "allowedValues": [
+                    {
+                      "label": "New",
+                      "value": "new"
+                    },
+                    {
+                      "label": "Existing",
+                      "value": "existing"
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "databaseConfig",
+                "type": "Microsoft.Common.Section",
+                "label": "Database configuration",
+                "elements": [
+                  {
+                    "name": "databaseType",
+                    "type": "Microsoft.Common.DropDown",
+                    "label": "Database type",
+                    "defaultValue": "SQL Server 2014",
+                    "constraints": {
+                      "allowedValues": [
+                        {
+                          "label": "SQL Server 2014",
+                          "value": "sqlserver2014"
+                        },
+                        {
+                          "label": "SQL Server 2016",
+                          "value": "sqlserver2016"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "databaseHostName",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Database machine name",
+                    "defaultValue": "DVM",
+                    "constraints": {
+                      "required": true,
+                      "regex": "^([a-zA-Z][a-z0-9A-Z\\-]{2,30})$",
+                      "validationMessage": "Only alphanumeric characters, and hyphen are allowed. The value must be 3-30 characters long"
+                    },
+                    "visible": "[not(equals(steps('databaseConfiguration').databaseConfig.databaseType, 'azuresqlserver'))]"
+                  },
 
-sitekeyKeyword=${13}
+                  {
+                    "name": "dbVMAdminUsername",
+                    "type": "Microsoft.Compute.UserNameTextBox",
+                    "label": "Username",
+                    "toolTip": "Admin username for the machines",
+                    "osPlatform": "Windows",
+                    "constraints": {
+                      "required": true
+                    },
+                    "visible": "[not(equals(steps('databaseConfiguration').databaseConfig.databaseType, 'azuresqlserver'))]"
+                  },
+                  {
+                    "name": "dbVMAdminPassword",
+                    "type": "Microsoft.Compute.CredentialsCombo",
+                    "label": {
+                      "password": "Password",
+                      "confirmPassword": "Confirm password"
+                    },
+                    "toolTip": {
+                      "password": "Admin password for the machines"
+                    },
+                    "osPlatform": "Windows",
+                    "constraints": {
+                      "required": true
+                    },
+                    "visible": "[not(equals(steps('databaseConfiguration').databaseConfig.databaseType, 'azuresqlserver'))]"
+                  },
 
-joinDomain=${14}
-osUserName=${15}
-
-storageName=${16}
-storageKey=${17}
-
-domainLicenseURL=${18}
-
-mrsdbuser=${19}
-mrsdbpwd=${20}
-refdatadbuser=${21}
-refdatadbpwd=${22}
-profiledbuser=${23}
-profiledbpwd=${24}
-
-echo Starting Informatica setup...
-echo Number of parameters $#
-#echo $domainHost $domainName $domainUser $domainPassword $nodeName $nodePort $dbType $dbName $dbUser $dbPassword $dbHost $dbPort $sitekeyKeyword $joinDomain $osUserName $storageName $storageKey $domainLicenseURL
-
-#Usage
-if [ $# -ne 24 ]
-then
-	echo lininfainstaller.sh domainHost domainName domainUser domainPassword nodeName nodePort dbType dbName dbUser dbPassword dbHost dbPort sitekeyKeyword joinDomain  osUserName storageName storageKey domainLicenseURL mrsdbuser mrsdbpwd refdatadbuser refdatadbpwd profiledbuser profiledbpwd
-	exit -1
-fi
-
-dbaddress=$dbHost:$dbPort
-hostname=`hostname`
-
-#preparing connection strings
-dataacccessstring=$dbHost"@"$dbName
-metadataaccessstring="'jdbc:informatica:sqlserver://"$dbaddress";SelectMethod=cursor;databaseName="$dbName"'"
-mrscustomstring="jdbc:informatica:sqlserver://"$dbaddress";DatabaseName="$dbName";SnapshotSerializable=true"
-
-informaticaopt=/opt/Informatica
-infainstallerloc=$informaticaopt/Archive/server
-utilityhome=$informaticaopt/Archive/utilities
-
-
-infainstallionlocown=/home/Informatica
-#mkdir -p $infainstallionlocown/10.1.1
-
-echo Creating symbolic link to Informatica installation
-ln -s $infainstallionlocown /home/$osUserName
-
-infainstallionloc=\\/home\\/Informatica\\/10.1.1
-defaultkeylocation=$infainstallionloc\\/isp\\/config\\/keys
-licensekeylocation=\\/opt\\/Informatica\\/license.key
-
-# Firewall configurations
-echo Adding firewall rules for Informatica domain service ports
-iptables -A IN_public_allow -p tcp -m tcp --dport 6005:6008 -m conntrack --ctstate NEW -j ACCEPT
-iptables -A IN_public_allow -p tcp -m tcp --dport 6014:6114 -m conntrack --ctstate NEW -j ACCEPT
-iptables -A IN_public_allow -p tcp -m tcp --dport 8095:9005 -m conntrack --ctstate NEW -j ACCEPT
-iptables -A IN_public_allow -p tcp -m tcp --dport 8085 -m conntrack --ctstate NEW -j ACCEPT
-
-# Java Home configuration
-echo Setting JRE_HOME
-JRE_HOME="$infainstallerloc/source/java/jre"
-export JRE_HOME
-PATH="$JRE_HOME/bin":"$PATH"
-export PATH
-
-chmod -R 777 $JRE_HOME
-
-cloudsupportenable=1
-if [ "$domainLicenseURL" != "nolicense" -a $joinDomain -eq 0 ]
-then
-	echo Getting Informatica license
-	cd $utilityhome
-	java -jar iadutility.jar downloadHttpUrlFile -url $domainLicenseURL -localpath $informaticaopt/license.key
-
-	if [ -f $informaticaopt/license.key ]
-	then
-		cloudsupportenable=0
-	else
-		echo Error downloading license file from URL $domainLicenseURL
-	fi
-fi
+                  {
+                    "name": "databaseName",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Database name",
+                    "defaultValue": "infadb",
+                    "toolTip": "Name for the database",
+                    "constraints": {
+                      "required": true,
+                      "regex": "^([a-zA-Z][a-z0-9A-Z]{2,30})$",
+                      "validationMessage": "Only alphanumeric characters are allowed. The value must be 3-30 characters long"
+                    },
+                    "visible": "[not(equals(steps('databaseConfiguration').databaseConfig.databaseType, 'azuresqlserver'))]"
+                  },
 
 
-createDomain=1
-if [ $joinDomain -eq 1 ]
-then
-    createDomain=0
-	# This is buffer time for master node to start
-	sleep 300
-else
-	echo Creating shared directory on Azure storage
-	cd $utilityhome
-    java -jar iadutility.jar createAzureFileShare -storageaccesskey $storageKey -storagename $storageName
-fi
+                  {
+                    "name": "databaseVMSize",
+                    "type": "Microsoft.Compute.SizeSelector",
+                    "label": "Database  machine size",
+                    "toolTip": "The size of machine for database",
+                    "recommendedSizes": [
+                      "Standard_DS3",
+                      "Standard_DS3_v2",
+                      "Standard_DS4",
+                      "Standard_DS4_v2"
+                    ],
+                    "osPlatform": "Windows",
+                    "imageReference": {
+                      "publisher": "MicrosoftSQLServer",
+                      "offer": "SQL2014SP2-WS2012R2",
+                      "sku": "Enterprise"
+                    },
+                    "count": 1,
+                    "visible": "[not(equals(steps('databaseConfiguration').databaseConfig.databaseType, 'azuresqlserver'))]"
+                  }
+                ],
+                "visible": "[equals(steps('databaseConfiguration').databaseNewOrExisting, 'new')]"
+              },
+              {
+                "name": "domainDatabaseUser",
+                "type": "Microsoft.Common.Section",
+                "label": "Informatica Domain Database User",
+                "elements": [
+                  {
+                    "name": "infaDomainDBUser",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Informatica Domain Database username",
+                    "defaultValue": "",
+                    "toolTip": "Database user to be created for communication between Domain and Database",
+                    "constraints": {
+                      "required": true,
+                      "regex": "(?!^(p|P)(u|U)(b|B)(l|L)(i|I)(c|C)$)(?!^(d|D)(b|B)(o|O)$)(?!^(s|S)(y|Y)(s|S)$)(?!^(g|G)(u|U)(e|E)(s|S)(t|T)$)(^[a-zA-Z][a-zA-Z0-9_-]{2,127}$)",
+                      "validationMessage": "Username must begin with an alphabet, only alphanumeric characters, hyphen and underscore are allowed, and the value must be 3-128 characters in length. Usernames sa, public, dbo, sys, and guest are not allowed"
+                    }
+                  },
+                  {
+                    "name": "infaDomainDBPassword",
+                    "type": "Microsoft.Common.PasswordBox",
+                    "label": {
+                      "password": "Informatica Domain Database password",
+                      "confirmPassword": "Confirm Informatica Domain Database password"
+                    },
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^\\s\\w])(?!.*[\"$]).{8,123}$",
+                      "validationMessage": "Password must be at least 8 characters in length. Should contain at least one special character, number, upper-case and lower-case character. Double quote(\") and dollar($) is not allowed"
+                    },
+                    "options": {
+                      "hideConfirmation": false
+                    }
+                  }
+                ],
+                "visible": "[equals(steps('databaseConfiguration').databaseNewOrExisting, 'new')]"
+                //  }
+                // ]
+              },
+              {
+                /*    "name": "dqConfig",
+                    "label": "Informatica Data Quality Services",
+                    "subLabel": {
+                      "preValidation": "Configure Informatica Data Quality Services",
+                      "postValidation": "Done"
+                    },
+                    "bladeTitle": "Informatica Data Quality Services", */
+                "name": "dqConfig",
+                "type": "Microsoft.Common.Section",
+                "label": "Informatica Data Quality Services",
+           /*     "elements": [
+                  {
+                    "name": "mrsdbconfig",
+                    "type": "Microsoft.Common.Section",
+                    "label": "Model Repository Configuration", */
+                    "elements": [
+                      {
+                        "name": "mrsDBuser",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Database Username",
+                        "defaultValue": "",
+                        "toolTip": "Database user to be created for Model Repository Service",
+                        "constraints": {
+                          "required": true,
+                          "regex": "(?!^(p|P)(u|U)(b|B)(l|L)(i|I)(c|C)$)(?!^(d|D)(b|B)(o|O)$)(?!^(s|S)(y|Y)(s|S)$)(?!^(g|G)(u|U)(e|E)(s|S)(t|T)$)(^[a-zA-Z][a-zA-Z0-9_-]{2,127}$)",
+                          "validationMessage": "Username must begin with an alphabet, only alphanumeric characters, hyphen and underscore are allowed, and the value must be 3-128 characters in length. Usernames sa, public, dbo, sys, and guest are not allowed"
+                        }
+                      },
+                      {
+                        "name": "mrsDBpassword",
+                        "type": "Microsoft.Common.PasswordBox",
+                        "label": {
+                          "password": "Database Password",
+                          "confirmPassword": "Confirm Database Password"
+                        },
+                        "constraints": {
+                          "required": true,
+                          "regex": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^\\s\\w])(?!.*[\"$]).{8,123}$",
+                          "validationMessage": "Password must be at least 8 characters in length. Should contain at least one special character, number, upper-case and lower-case character. Double quote(\") and dollar($) is not allowed"
+                        },
+                        "options": {
+                          "hideConfirmation": false
+                        }
+                      },
+                 //   ]
+               //   },
+                  {
+                    
+                        "name": "refDataDBuser",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Database Username",
+                        "defaultValue": "",
+                        "toolTip": "Database user to be created for Reference Data",
+                        "constraints": {
+                          "required": true,
+                          "regex": "(?!^(p|P)(u|U)(b|B)(l|L)(i|I)(c|C)$)(?!^(d|D)(b|B)(o|O)$)(?!^(s|S)(y|Y)(s|S)$)(?!^(g|G)(u|U)(e|E)(s|S)(t|T)$)(^[a-zA-Z][a-zA-Z0-9_-]{2,127}$)",
+                          "validationMessage": "Username must begin with an alphabet, only alphanumeric characters, hyphen and underscore are allowed, and the value must be 3-128 characters in length. Usernames sa, public, dbo, sys, and guest are not allowed"
+                        }
+                      },
+                      {
+                        "name": "refDataDBpassword",
+                        "type": "Microsoft.Common.PasswordBox",
+                        "label": {
+                          "password": "Database Password",
+                          "confirmPassword": "Confirm Database Password"
+                        },
+                        "constraints": {
+                          "required": true,
+                          "regex": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^\\s\\w])(?!.*[\"$]).{8,123}$",
+                          "validationMessage": "Password must be at least 8 characters in length. Should contain at least one special character, number, upper-case and lower-case character. Double quote(\") and dollar($) is not allowed"
+                        },
+                        "options": {
+                          "hideConfirmation": false
+                        }
+                      },
+                  
+                  {
+                   
+                        "name": "profileDBuser",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Database Username",
+                        "defaultValue": "",
+                        "toolTip": "Database user to be created for Profiling Warehouse",
+                        "constraints": {
+                          "required": true,
+                          "regex": "(?!^(p|P)(u|U)(b|B)(l|L)(i|I)(c|C)$)(?!^(d|D)(b|B)(o|O)$)(?!^(s|S)(y|Y)(s|S)$)(?!^(g|G)(u|U)(e|E)(s|S)(t|T)$)(^[a-zA-Z][a-zA-Z0-9_-]{2,127}$)",
+                          "validationMessage": "Username must begin with an alphabet, only alphanumeric characters, hyphen and underscore are allowed, and the value must be 3-128 characters in length. Usernames sa, public, dbo, sys, and guest are not allowed"
+                        }
+                      },
+                      {
+                        "name": "profileDBpassword",
+                        "type": "Microsoft.Common.PasswordBox",
+                        "label": {
+                          "password": "Database Password",
+                          "confirmPassword": "Confirm Database Password"
+                        },
+                        "constraints": {
+                          "required": true,
+                          "regex": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^\\s\\w])(?!.*[\"$]).{8,123}$",
+                          "validationMessage": "Password must be at least 8 characters in length. Should contain at least one special character, number, upper-case and lower-case character. Double quote(\") and dollar($) is not allowed"
+                        },
+                        "options": {
+                          "hideConfirmation": false
+                        }
+                      }
+                  
+                ],
+                "visible": "[and(equals(steps('databaseConfiguration').databaseNewOrExisting, 'new'), equals(steps('infaDomainConfiguration').domainServiceConfig.DQServiceCreateOrSkip, 'create'))]"
+              },
 
-echo Mounting the shared directory
-mountdir=/mnt/infaaeshare
-mkdir $mountdir
-mount -t cifs //$storageName.file.core.windows.net/infaaeshare $mountdir -o vers=3.0,username=$storageName,password=$storageKey,dir_mode=0777,file_mode=0777
-echo //$storageName.file.core.windows.net/infaaeshare $mountdir cifs vers=3.0,username=$storageName,password=$storageKey,dir_mode=0777,file_mode=0777 >> /etc/fstab
+              {
+                "name": "databaseExistingType",
+                "type": "Microsoft.Common.DropDown",
+                "label": "Database type",
+                "defaultValue": "SQL Server",
+                "constraints": {
+                  "allowedValues": [
+                    {
+                      "label": "SQL Server",
+                      "value": "sqlserver"
+                    },
+                    {
+                      "label": "Oracle",
+                      "value": "oracle"
+                    },
+                    {
+                      "label": "DB2",
+                      "value": "db2"
+                    }
+                  ]
+                },
+                "visible": "[equals(steps('databaseConfiguration').databaseNewOrExisting, 'existing')]"
+              },
 
-echo Editing Informatica silent installation file
-sed -i s/^LICENSE_KEY_LOC=.*/LICENSE_KEY_LOC=$licensekeylocation/ $infainstallerloc/SilentInput.properties
+              {
+                "name": "databaseExistingConfig",
+                "type": "Microsoft.Common.Section",
+                "label": "Database configuration",
+                "elements": [
+                  {
+                    "name": "databaseExistingHostName",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Database machine name",
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?!.*[\"$]).{1,255}$",
+                      "validationMessage": "Double quote(\") and dollar($) is not allowed"
+                    }
+                  },
+                  {
+                    "name": "databaseExistingPort",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Database port",
+                    "constraints": {
+                      "required": true,
+                      "regex": "^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$",
+                      "validationMessage": "Port number should be between 0 to 65535"
+                    }
+                  },
+                  {
+                    "name": "databaseExistingName",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Database name",
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?!.*[\"$]).{1,255}$",
+                      "validationMessage": "Double quote(\") and dollar($) is not allowed"
+                    }
+                  },
+                  {
+                    "name": "databaseExistingTablespace",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "DB2 database tablespace name",
+                    "constraints": {
+                      "required": false,
+                      "regex": "^(?!.*[\"$]).{1,255}$",
+                      "validationMessage": "Double quote(\") and dollar($) is not allowed"
+                    },
+                    "visible": "[equals(steps('databaseConfiguration').databaseExistingType, 'db2')]"
+                  }
+                ],
+                "visible": "[equals(steps('databaseConfiguration').databaseNewOrExisting, 'existing')]"
+              },
 
-sed -i s/^USER_INSTALL_DIR=.*/USER_INSTALL_DIR=$infainstallionloc/ $infainstallerloc/SilentInput.properties
+              {
+                "name": "domainExistingDatabaseUser",
+                "type": "Microsoft.Common.Section",
+                "label": "Domain database user",
+                "elements": [
+                  {
+                    "name": "infaExistingDomainDBUser",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Informatica domain DB user",
+                    "defaultValue": "",
+                    "toolTip": "Database user needed for communication between Domain and Database",
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?!.*[\"$]).{1,255}$",
+                      "validationMessage": "Double quote(\") and dollar($) is not allowed"
+                    }
+                  },
+                  {
+                    "name": "infaExistingDomainDBPassword",
+                    "type": "Microsoft.Common.PasswordBox",
+                    "label": {
+                      "password": "Informatica domain DB password",
+                      "confirmPassword": "Confirm Informatica domain DB password"
+                    },
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^\\s\\w])(?!.*[\"$]).{8,123}$",
+                      "validationMessage": "Password must be at least 8 characters in length. Should contain at least one special character, number, upper-case and lower-case character. Double quote(\") and dollar($) is not allowed"
+                    },
+                    "options": {
+                      "hideConfirmation": true
+                    }
+                  }
+                ],
+                "visible": "[equals(steps('databaseConfiguration').databaseNewOrExisting, 'existing')]"
+              },
 
-sed -i s/^CREATE_DOMAIN=.*/CREATE_DOMAIN=$createDomain/ $infainstallerloc/SilentInput.properties
+              {
+                "name": "serviceExistingDatabaseUser",
+                "type": "Microsoft.Common.Section",
+                "label": "Service database user",
+                "elements": [
+                  {
+                    "name": "infaExistingMRSDBUser",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Informatica Repository DB user",
+                    "defaultValue": "",
+                    "toolTip": "Database user needed to create Model Repository Service",
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?!.*[\"$]).{1,255}$",
+                      "validationMessage": "Double quote(\") and dollar($) is not allowed"
+                    }
+                  },
+                  {
+                    "name": "infaExistingMRSDBPassword",
+                    "type": "Microsoft.Common.PasswordBox",
+                    "label": {
+                      "password": "Informatica Repository DB password",
+                      "confirmPassword": "Confirm Informatica Repository DB password"
+                    },
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^\\s\\w])(?!.*[\"$]).{8,123}$",
+                      "validationMessage": "Password must be at least 8 characters in length. Should contain at least one special character, number, upper-case and lower-case character. Double quote(\") and dollar($) is not allowed"
+                    },
+                    "options": {
+                      "hideConfirmation": true
+                    }
+                  },
+                  {
+                    "name": "infaExistingCMSDBUser",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Informatica Repository DB user",
+                    "defaultValue": "",
+                    "toolTip": "Database user needed to create Reference Data",
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?!.*[\"$]).{1,255}$",
+                      "validationMessage": "Double quote(\") and dollar($) is not allowed"
+                    }
+                  },
+                  {
+                    "name": "infaExistingCMSDBPassword",
+                    "type": "Microsoft.Common.PasswordBox",
+                    "label": {
+                      "password": "Reference Data DB password",
+                      "confirmPassword": "Confirm Reference Data DB password"
+                    },
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^\\s\\w])(?!.*[\"$]).{8,123}$",
+                      "validationMessage": "Password must be at least 8 characters in length. Should contain at least one special character, number, upper-case and lower-case character. Double quote(\") and dollar($) is not allowed"
+                    },
+                    "options": {
+                      "hideConfirmation": true
+                    }
+                  },
+                  {
+                    "name": "infaExistingProfileDBUser",
+                    "type": "Microsoft.Common.TextBox",
+                    "label": "Informatica Repository DB user",
+                    "defaultValue": "",
+                    "toolTip": "Database user needed to create Profiling Warehouse",
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?!.*[\"$]).{1,255}$",
+                      "validationMessage": "Double quote(\") and dollar($) is not allowed"
+                    }
+                  },
+                  {
+                    "name": "infaExistingProfileDBPassword",
+                    "type": "Microsoft.Common.PasswordBox",
+                    "label": {
+                      "password": "Informatica Profiling Warehouse DB password",
+                      "confirmPassword": "Confirm Informatica Profiling Warehouse DB password"
+                    },
+                    "constraints": {
+                      "required": true,
+                      "regex": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^\\s\\w])(?!.*[\"$]).{8,123}$",
+                      "validationMessage": "Password must be at least 8 characters in length. Should contain at least one special character, number, upper-case and lower-case character. Double quote(\") and dollar($) is not allowed"
+                    },
+                    "options": {
+                      "hideConfirmation": true
+                    }
+                  }
+                ],
+                "visible": "[and(equals(steps('databaseConfiguration').databaseNewOrExisting, 'existing'), equals(steps('infaDomainConfiguration').domainServiceConfig.pcServiceCreateOrSkip, 'create'))]"
+              }
+            ]
+          },
 
-sed -i s/^JOIN_DOMAIN=.*/JOIN_DOMAIN=$joinDomain/ $infainstallerloc/SilentInput.properties
+                  {
+                    "name": "infraConfiguration",
+                    "label": "Infrastructure Settings",
+                    "subLabel": {
+                      "preValidation": "Configure Storage and VNET settings",
+                      "postValidation": "Done"
+                    },
+                    "bladeTitle": "Infrastructure Settings",
+                    "elements": [
+                      {
+                        "name": "storageAccount",
+                        "type": "Microsoft.Storage.StorageAccountSelector",
+                        "label": "Storage account",
+                        "toolTip": "Storage account used for the machines",
+                        "defaultValue": {
+                          "type": "Standard_LRS"
+                        }
+                      },
+                      {
+                        "name": "infavnet",
+                        "type": "Microsoft.Network.VirtualNetworkCombo",
+                        "label": {
+                          "virtualNetwork": "Virtual network",
+                          "subnets": "Subnets"
+                        },
+                        "toolTip": {
+                          "virtualNetwork": "Virtual network all resource required to be part of",
+                          "subnets": "Subnet all resource required to be part of"
+                        },
+                        "defaultValue": {
+                          "name": "InfaVNET",
+                          "addressPrefixSize": "/16"
+                        },
+                        "constraints": {
+                          "minAddressPrefixSize": "/30"
+                        },
+                        "subnets": {
+                          "subnet1": {
+                            "label": "Subnet",
+                            "defaultValue": {
+                              "name": "InfaSubnet",
+                              "addressPrefixSize": "/24"
+                            },
+                            "constraints": {
+                              "minAddressPrefixSize": "/30",
+                              "minAddressCount": "[add(1, 1)]",
+                              "requireContiguousAddresses": true
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
 
-sed -i s/^CLOUD_SUPPORT_ENABLE=.*/CLOUD_SUPPORT_ENABLE=$cloudsupportenable/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^ENABLE_USAGE_COLLECTION=.*/ENABLE_USAGE_COLLECTION=1/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^KEY_DEST_LOCATION=.*/KEY_DEST_LOCATION=$defaultkeylocation/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^PASS_PHRASE_PASSWD=.*/PASS_PHRASE_PASSWD=$(echo $sitekeyKeyword | sed -e 's/\\/\\\\/g; s/\//\\\//g; s/&/\\\&/g')/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^SERVES_AS_GATEWAY=.*/SERVES_AS_GATEWAY=1/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DB_TYPE=.*/DB_TYPE=$dbType/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DB_UNAME=.*/DB_UNAME=$dbUser/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DB_PASSWD=.*/DB_PASSWD=$(echo $dbPassword | sed -e 's/\\/\\\\/g; s/\//\\\//g; s/&/\\\&/g')/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DB_SERVICENAME=.*/DB_SERVICENAME=$dbName/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DB_ADDRESS=.*/DB_ADDRESS=$dbaddress/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DOMAIN_NAME=.*/DOMAIN_NAME=$domainName/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^NODE_NAME=.*/NODE_NAME=$nodeName/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DOMAIN_PORT=.*/DOMAIN_PORT=$nodePort/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^JOIN_NODE_NAME=.*/JOIN_NODE_NAME=$nodeName/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^JOIN_HOST_NAME=.*/JOIN_HOST_NAME=$hostname/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^JOIN_DOMAIN_PORT=.*/JOIN_DOMAIN_PORT=$nodePort/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DOMAIN_USER=.*/DOMAIN_USER=$domainUser/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DOMAIN_HOST_NAME=.*/DOMAIN_HOST_NAME=$domainHost/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DOMAIN_PSSWD=.*/DOMAIN_PSSWD=$(echo $domainPassword | sed -e 's/\\/\\\\/g; s/\//\\\//g; s/&/\\\&/g')/ $infainstallerloc/SilentInput.properties
-
-sed -i s/^DOMAIN_CNFRM_PSSWD=.*/DOMAIN_CNFRM_PSSWD=$(echo $domainPassword | sed -e 's/\\/\\\\/g; s/\//\\\//g; s/&/\\\&/g')/ $infainstallerloc/SilentInput.properties
-
-# To speed up installation
-mv $infainstallerloc/source $infainstallerloc/source_temp
-mkdir $infainstallerloc/source
-mv $infainstallerloc/unjar_esd.sh $infainstallerloc/unjar_esd.sh_temp
-head -1 $infainstallerloc/unjar_esd.sh_temp > $infainstallerloc/unjar_esd.sh
-echo exit_value_unjar_esd=0 >> $infainstallerloc/unjar_esd.sh
-chmod 777 $infainstallerloc/unjar_esd.sh
-
-echo Installing Informatica domain
-cd $infainstallerloc
-echo Y Y | sh silentinstall.sh 
-
-
-# Revert speed up changes
-mv $infainstallerloc/source_temp/* $infainstallerloc/source
-rm $infainstallerloc/unjar_esd.sh
-mv $infainstallerloc/unjar_esd.sh_temp $infainstallerloc/unjar_esd.sh
-
-
-echo Changing ownership of directories
-chown -R $osUserName $infainstallionlocown
-chown -R $osUserName $informaticaopt 
-chown -R $osUserName $mountdir
-chown -R $osUserName /home/$osUserName
-
-function createDQServices {
-    echo "Creating DQ services Start" >> $informaticaopt/InfaServiceLog.log
-	
-	echo "Creating STAGE connection" >> $informaticaopt/InfaServiceLog.log
-	sh /home/Informatica/10.1.1/isp/bin/infacmd.sh createConnection -dn $domainName -un $domainUser -pd $domainPassword -cn STAGE -cid STAGE -ct SQLSERVER -cun $refdatadbuser -cpd $refdatadbpwd -o CodePage='UTF-8' DataAccessConnectString=''$dataacccessstring'' MetadataAccessConnectString=''$metadataaccessstring'' &>> $informaticaopt/InfaServiceLog.log
-
-	echo "Creating PROFILE connection" >> $informaticaopt/InfaServiceLog.log
-	sh /home/Informatica/10.1.1/isp/bin/infacmd.sh createConnection -dn $domainName -un $domainUser -pd $domainPassword -cn PROFILE -cid PROFILE -ct SQLSERVER -cun $profiledbuser -cpd $profiledbpwd -o CodePage='UTF-8' DataAccessConnectString=''$dataacccessstring'' MetadataAccessConnectString=''$metadataaccessstring'' &>> $informaticaopt/InfaServiceLog.log
-
-	echo "Creating Model Repository Service" >> $informaticaopt/InfaServiceLog.log
-	sh /home/Informatica/10.1.1/isp/bin/infacmd.sh mrs createService -dn $domainName -nn $nodeName -un $domainUser -pd $domainPassword -sn ModelRepositoryService -du $mrsdbuser -dp $mrsdbpwd -dl $mrscustomstring -dt SQLSERVER &>> $informaticaopt/InfaServiceLog.log
-	
-	echo "Creating Data Integration Service" >> $informaticaopt/InfaServiceLog.log
-	sh /home/Informatica/10.1.1/isp/bin/infacmd.sh dis createService -dn $domainName -nn $nodeName -un $domainUser -pd $domainPassword -sn DataIntegrationService -rs ModelRepositoryService -rsun $domainUser -rspd $domainPassword -HttpPort 8095 &>> $informaticaopt/InfaServiceLog.log
-	
-	echo "Creating Content Management Service" >> $informaticaopt/InfaServiceLog.log
-	sh /home/Informatica/10.1.1/isp/bin/infacmd.sh cms createService -dn $domainName -nn $nodeName -un $domainUser -pd $domainPassword -sn ContentManagementService -ds DataIntegrationService -rs ModelRepositoryService -rsu $domainUser -rsp $domainPassword -rdl STAGE -HttpPort 8105 &>> $informaticaopt/InfaServiceLog.log
-	
-	echo "Creating Analyst Service" >> $informaticaopt/InfaServiceLog.log
-	sh /home/Informatica/10.1.1/isp/bin/infacmd.sh as createService -dn $domainName -nn $nodeName -un $domainUser -pd $domainPassword -sn AnalystService -ds DataIntegrationService -rs ModelRepositoryService -au $domainUser -ap $domainPassword -HttpPort 8085 &>> $informaticaopt/InfaServiceLog.log
-
+        "outputs": {
+          "location": "[location()]",
+          "nodeVMNamePrefix": "[steps('nodeVMConfiguration').nodeVMPrefix]",
+          "nodeVMAuthType": "[coalesce(steps('nodeVMConfiguration').nodeVMAdminPasswordWin.authenticationType, steps('nodeVMConfiguration').nodeVMAdminPasswordLin.authenticationType)]",
+          "nodeVMAdminUsername": "[coalesce(steps('nodeVMConfiguration').nodeVMAdminUsernameWin, steps('nodeVMConfiguration').nodeVMAdminUsernameLin)]",
+          "nodeVMAdminPassword": "[coalesce(steps('nodeVMConfiguration').nodeVMAdminPasswordWin.password, steps('nodeVMConfiguration').nodeVMAdminPasswordLin.password)]",
+          "nodeVMAdminSshPublicKey": "[steps('nodeVMConfiguration').nodeVMAdminPasswordLin.sshPublicKey]",
+          "nodeVMSize": "[coalesce(steps('nodeVMConfiguration').nodeVMSizeWin, steps('nodeVMConfiguration').nodeVMSizeLin)]",
+          "nodeVMOS": "[steps('nodeVMConfiguration').nodeVMOS]",
+          "infaVersion": "[steps('infaDomainConfiguration').domainConfig.infaVersion]",
+          "infaDomainName": "[steps('infaDomainConfiguration').domainConfig.infaDomainName]",
+          "infaDomainUser": "[steps('infaDomainConfiguration').domainConfig.infaDomainUser]",
+          "infaDomainPassword": "[steps('infaDomainConfiguration').domainConfig.infaDomainPassword]",
+          "infaDomainLicense": "[steps('infaDomainConfiguration').domainConfig.infaDomainLicense]",
+          "infaKeyword": "[steps('infaDomainConfiguration').domainConfig.infaDomainEncryptionKeyword]",
+          "infaDQSkipOrCreate": "[steps('infaDomainConfiguration').domainServiceConfig.DQServiceCreateOrSkip]",
+          "dbNewOrExisting": "[steps('databaseConfiguration').databaseNewOrExisting]",
+          "dbVMName": "[coalesce(steps('databaseConfiguration').databaseConfig.databaseHostName, steps('databaseConfiguration').databaseExistingConfig.databaseExistingHostName)]",
+          "dbVMSize": "[steps('databaseConfiguration').databaseConfig.databaseVMSize]",
+          "dbType": "[coalesce(steps('databaseConfiguration').databaseConfig.databaseType, steps('databaseConfiguration').databaseExistingType)]",
+          "dbName": "[coalesce(steps('databaseConfiguration').databaseConfig.databaseName, steps('databaseConfiguration').databaseExistingConfig.databaseExistingName)]",
+          "dbPort": "[steps('databaseConfiguration').databaseExistingConfig.databaseExistingPort]",
+          "dbTablespace": "[steps('databaseConfiguration').databaseExistingConfig.databaseExistingTablespace]",
+          "dbVMAdminUsername": "[steps('databaseConfiguration').databaseconfig.dbVMAdminUsername]",
+          "dbVMAdminPassword": "[steps('databaseConfiguration').databaseconfig.dbVMAdminPassword.password]",
+          "dbUser": "[coalesce(steps('databaseConfiguration').domainDatabaseUser.infaDomainDBUser, steps('databaseConfiguration').domainExistingDatabaseUser.infaExistingDomainDBUser)]",
+          //   "dbPassword": "[steps('databaseConfiguration').databaseuser.infaDomainDBPassword]",
+          "dbPassword": "[coalesce(steps('databaseConfiguration').domainDatabaseUser.infaDomainDBPassword, steps('databaseConfiguration').domainExistingDatabaseUser.infaExistingDomainDBPassword)]",
+          //  "mrsdbuser": "[steps('dqConfig').mrsdbconfig.mrsDBuser]",
+          "mrsdbuser": "[coalesce(steps('databaseConfiguration').dqConfig.mrsDBuser, steps('databaseConfiguration').serviceExistingDatabaseUser.infaExistingMRSDBUser)]",
+          //  "mrsdbpwd": "[steps('dqConfig').mrsdbconfig.mrsDBpassword]",
+          "mrsdbpwd": "[coalesce(steps('databaseConfiguration').dqConfig.mrsDBpassword, steps('databaseConfiguration').serviceExistingDatabaseUser.infaExistingMRSDBPassword)]",
+          "refdatadbuser": "[coalesce(steps('databaseConfiguration').dqConfig.refDataDBuser, steps('databaseConfiguration').serviceExistingDatabaseUser.infaExistingCMSDBUser)]",
+          "refdatadbpwd": "[coalesce(steps('databaseConfiguration').dqConfig.refDataDBpassword, steps('databaseConfiguration').serviceExistingDatabaseUser.infaExistingCMSDBPassword)]",
+          "profiledbuser": "[coalesce(steps('databaseConfiguration').dqConfig.profileDBuser, steps('databaseConfiguration').serviceExistingDatabaseUser.infaExistingProfileDBUser)]",
+          "profiledbpwd": "[coalesce(steps('databaseConfiguration').dqConfig.profileDBpassword, steps('databaseConfiguration').serviceExistingDatabaseUser.infaExistingProfileDBPassword)]",
+          "storageName": "[steps('infraConfiguration').storageAccount.name]",
+          "storageType": "[steps('infraConfiguration').storageAccount.type]",
+          "storageExistingOrNew": "[steps('infraConfiguration').storageAccount.newOrExisting]",
+          "existingStorageRG": "[steps('infraConfiguration').storageAccount.resourceGroup]",
+          "vnetName": "[steps('infraConfiguration').infavnet.name]",
+          "vnetAddressPrefix": "[steps('infraConfiguration').infavnet.addressPrefix]",
+          "vnetExistingOrNew": "[steps('infraConfiguration').infavnet.newOrExisting]",
+          "existingVnetRG": "[steps('infraConfiguration').infavnet.resourceGroup]",
+          "subnetName": "[steps('infraConfiguration').infavnet.subnets.subnet1.name]",
+          "subnetPrefix": "[steps('infraConfiguration').infavnet.subnets.subnet1.addressPrefix]"
+        }
+    }      
 }
-
-createDQServices
-
-
-if [ -f $informaticaopt/license.key ]
-then
-	
-	echo "Removing License Key"
-	rm $informaticaopt/license.key
-
-	echo "Retrieving License Name from Domain" >> $informaticaopt/InfaServiceLog.log
-	aamit=$(/home/Informatica/10.1.1/isp/bin/infacmd.sh listLicenses -dn $domainName -un $domainUser -pd $domainPassword)
-	license=$(echo $aamit | awk '{split($0,license," "); print license[1]}')
-	echo "License Name: " $license >> $informaticaopt/InfaServiceLog.log
-
-	echo "Assigning License to all the services" >> $informaticaopt/InfaServiceLog.log
-	sh /home/Informatica/10.1.1/isp/bin/infacmd.sh assignLicense -dn $domainName -un $domainUser -pd $domainPassword -ln $license -sn ModelRepositoryService DataIntegrationService ContentManagementService AnalystService >> $informaticaopt/InfaServiceLog.log
-
-	echo "Enabling Model Repository Service" >> $informaticaopt/InfaServiceLog.log
-    sh /home/Informatica/10.1.1/isp/bin/infacmd.sh enableService -dn $domainName -un $domainUser -pd $domainPassword -sn ModelRepositoryService >> $informaticaopt/InfaServiceLog.log
-
-	echo "Creating contents of Model Repository Service" >> $informaticaopt/InfaServiceLog.log
-	sh /home/Informatica/10.1.1/isp/bin/infacmd.sh mrs createContents -dn $domainName -un $domainUser -pd $domainPassword -sn ModelRepositoryService >> $informaticaopt/InfaServiceLog.log
-
-    echo "Assiging Profile connection to Data Integration Service" >> $informaticaopt/InfaServiceLog.log
-	sh /home/Informatica/10.1.1/isp/bin/infacmd.sh dis updateServiceoptions -dn $domainName -un $domainUser -pd $domainPassword -sn DataIntegrationService -o "ProfilingServiceOptions.ProfileWarehouseConnectionName=PROFILE" >> $informaticaopt/InfaServiceLog.log
-	
-    echo "Enabling Data Integration Service" >> $informaticaopt/InfaServiceLog.log
-    sh /home/Informatica/10.1.1/isp/bin/infacmd.sh enableService -dn $domainName -un $domainUser -pd $domainPassword -sn DataIntegrationService >> $informaticaopt/InfaServiceLog.log
-
-    echo "Creating Contents for Profiling Warehouse DataBase" >> $informaticaopt/InfaServiceLog.log
-	sh /home/Informatica/10.1.1/isp/bin/infacmd.sh ps createWH -dn $domainName -un $domainUser -pd $domainPassword -dsn DataIntegrationService >> $informaticaopt/InfaServiceLog.log
-
-    echo "Enabling Content Management Service" >> $informaticaopt/InfaServiceLog.log
-    sh /home/Informatica/10.1.1/isp/bin/infacmd.sh enableService -dn $domainName -un $domainUser -pd $domainPassword -sn ContentManagementService >> $informaticaopt/InfaServiceLog.log
-
-	echo "Creating Audit Table" >> $informaticaopt/InfaServiceLog.log
-    sh /home/Informatica/10.1.1/isp/bin/infacmd.sh cms createAuditTables -dn $domainName -un $domainUser -pd $domainPassword -sn ContentManagementService >> $informaticaopt/InfaServiceLog.log
-
-    echo "Enabling Analyst Service" >> $informaticaopt/InfaServiceLog.log
-    sh /home/Informatica/10.1.1/isp/bin/infacmd.sh enableService -dn $domainName -un $domainUser -pd $domainPassword -sn AnalystService >> $informaticaopt/InfaServiceLog.log
-
-fi
-
-echo Informatica setup Complete.
-
-# Restarting domain and setting up ODBC environment
-
-echo Recycling domain
-
-sh /home/Informatica/10.1.1/tomcat/bin/infaservice.sh shutdown
-
-sleep 120
-
-chown -R $osUserName /home/Informatica/
-
-echo Setting the ODBC environment variable
-export ODBCHOME=/home/Informatica/10.1.1/ODBC7.1
-export ODBCINI=$ODBCHOME/odbc.ini
-export ODBCINST=$ODBCHOME/odbcinst.ini
-export PATH=$PATH:$ODBCHOME/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ODBCHOME/lib
-
-echo $ODBCHOME $ODBCINI $ODBCINST $PATH $LD_LIBRARY_PATH
-
-sh /home/Informatica/10.1.1/tomcat/bin/infaservice.sh startup
