@@ -770,7 +770,7 @@
                     }
                   }
                 ],
-                "visible": "[and(equals(steps('databaseConfiguration').databaseNewOrExisting, 'existing'), equals(steps('infaDomainConfiguration').domainServiceConfig.pcServiceCreateOrSkip, 'create'))]"
+                "visible": "[and(equals(steps('databaseConfiguration').databaseNewOrExisting, 'existing'), equals(steps('infaDomainConfiguration').domainServiceConfig.DQServiceCreateOrSkip, 'create'))]"
               }
             ]
           },
